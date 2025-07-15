@@ -95,35 +95,98 @@ public class InvokeService implements IInvokeService {
         return this;
     }
 
+//    @Override
+//    public RpcMessageDto getResponse(String seqId) {
+//        try {
+//            RpcMessageDto rpcResponse = this.responseMap.get(seqId);
+//            if(ObjectUtil.isNotNull(rpcResponse)) {
+//                logger.debug("[Invoke] seq {} 对应结果已经获取: {}", seqId, rpcResponse);
+//                return rpcResponse;
+//            }
+//
+//            // 进入等待
+//            while (rpcResponse == null) {
+//                logger.debug("[Invoke] seq {} 对应结果为空，进入等待", seqId);
+//
+//                // 同步等待锁
+//                synchronized (this) {
+//                    this.wait();
+//                }
+//
+//                logger.debug("[Invoke] {} wait has notified!", seqId);
+//
+//                rpcResponse = this.responseMap.get(seqId);
+//                logger.debug("[Invoke] seq {} 对应结果已经获取: {}", seqId, rpcResponse);
+//            }
+//
+//            return rpcResponse;
+//        } catch (InterruptedException e) {
+//            logger.error("获取响应异常", e);
+//            throw new MqException(MqCommonRespCode.RPC_GET_RESP_FAILED);
+//        }
+//    }
+
+    /**
+     * 增加超时检测
+     * @author wbd
+     * @param seqId 序列号
+     * @return
+     */
     @Override
     public RpcMessageDto getResponse(String seqId) {
+        // 第一次检查：立即返回已存在的响应
+        RpcMessageDto rpcResponse = this.responseMap.get(seqId);
+        if (ObjectUtil.isNotNull(rpcResponse))  {
+            logger.debug("[Invoke]  seq {} 对应结果已经获取: {}", seqId, rpcResponse);
+            return rpcResponse;
+        }
+        Long expireTime = this.requestMap.get(seqId);
+        final long startTime = System.currentTimeMillis();  // 记录开始时间
+        if (expireTime == null) {
+            expireTime = startTime + 5000l; // 5秒超时
+        }
         try {
-            RpcMessageDto rpcResponse = this.responseMap.get(seqId);
-            if(ObjectUtil.isNotNull(rpcResponse)) {
-                logger.debug("[Invoke] seq {} 对应结果已经获取: {}", seqId, rpcResponse);
-                return rpcResponse;
-            }
-
-            // 进入等待
-            while (rpcResponse == null) {
-                logger.debug("[Invoke] seq {} 对应结果为空，进入等待", seqId);
-
-                // 同步等待锁
-                synchronized (this) {
-                    this.wait();
+            // 双重检查锁定确保线程安全
+            synchronized (this) {
+                // 第二次检查：防止在获取锁期间响应到达
+                rpcResponse = this.responseMap.get(seqId);
+                if (rpcResponse != null) {
+                    return rpcResponse;
                 }
 
-                logger.debug("[Invoke] {} wait has notified!", seqId);
+                // 进入超时等待循环
+                while (rpcResponse == null) {
+//                    long elapsed = System.currentTimeMillis()  - startTime;
+                    long remaining = expireTime - System.currentTimeMillis();
 
-                rpcResponse = this.responseMap.get(seqId);
-                logger.debug("[Invoke] seq {} 对应结果已经获取: {}", seqId, rpcResponse);
+                    // 剩余时间≤0表示超时
+                    if (remaining <= 0) {
+                        logger.warn("[Timeout]  seq {} 等待响应超时({}ms)", seqId);
+                        rpcResponse = new RpcMessageDto();
+                        rpcResponse.setRespCode(MqCommonRespCode.TIMEOUT.getCode());
+                        return rpcResponse;
+                    }
+
+                    logger.debug("[Wait]  seq {} 等待剩余时间: {}ms", seqId, remaining);
+
+                    // 带超时的等待（精确控制剩余时间）
+                    this.wait(remaining);
+
+                    // 唤醒后再次检查响应
+                    rpcResponse = this.responseMap.get(seqId);
+                    if (rpcResponse != null) {
+                        logger.debug("[Wake]  seq {} 成功获取响应: {}", seqId, rpcResponse);
+                        return rpcResponse;
+                    }
+                }
             }
-
-            return rpcResponse;
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             logger.error("获取响应异常", e);
             throw new MqException(MqCommonRespCode.RPC_GET_RESP_FAILED);
         }
+
+        // 理论上不会执行到此
+        return rpcResponse;
     }
 
     @Override
