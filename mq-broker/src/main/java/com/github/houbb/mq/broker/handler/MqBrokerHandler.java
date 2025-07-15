@@ -279,7 +279,11 @@ public class MqBrokerHandler extends SimpleChannelInboundHandler {
 
                 MqHeartBeatReq req = JSON.parseObject(json, MqHeartBeatReq.class);
                 registerConsumerService.heartbeat(req, channel);
-                return null;
+                //心跳包也进行回复20250715
+                MqCommonResp resp = new MqCommonResp();
+                resp.setRespCode(MqCommonRespCode.SUCCESS.getCode());
+                resp.setRespMessage(MqCommonRespCode.SUCCESS.getMsg());
+                return resp;
             }
             // 消费者消费状态 ACK
             if(MethodType.C_CONSUMER_STATUS.equals(methodType)) {
