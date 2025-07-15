@@ -38,12 +38,9 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 
-import java.lang.reflect.Method;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author binbin.hou
@@ -99,6 +96,8 @@ public class ConsumerBrokerService implements IConsumerBrokerService {
      */
     private IMqListenerService mqListenerService;
 
+    private ConsumerBrokerConfig config;
+
     /**
      * 心跳定时任务
      *
@@ -141,6 +140,8 @@ public class ConsumerBrokerService implements IConsumerBrokerService {
      * @since 0.1.4
      */
     protected String appSecret;
+
+    private boolean isReconnect = false;
 
     @Override
     public void initChannelFutureList(ConsumerBrokerConfig config) {
@@ -353,6 +354,9 @@ public class ConsumerBrokerService implements IConsumerBrokerService {
 
     @Override
     public void heartbeat() {
+        if (this.isReconnect) {
+            return;
+        }
         final MqHeartBeatReq req = new MqHeartBeatReq();
         final String traceId = IdHelper.uuid32();
         req.setTraceId(traceId);
@@ -367,8 +371,39 @@ public class ConsumerBrokerService implements IConsumerBrokerService {
         for(RpcChannelFuture channelFuture : channelFutureList) {
             try {
                 Channel channel = channelFuture.getChannelFuture().channel();
-                callServer(channel, req, null);
-            } catch (Exception exception) {
+                MqCommonResp resp = callServer(channel, req, MqCommonResp.class);
+                log.debug("[HEARTBEAT] 服务端心跳处理结果 {}", JSON.toJSON(resp));
+                if (!MqCommonRespCode.SUCCESS.getCode().equals(resp.getRespCode())) {
+                    log.error("[HEARTBEAT] 服务端心跳处理异常 {}", JSON.toJSON(resp));
+                }
+            } catch (MqException e) {
+                this.isReconnect = true;
+                log.error("[HEARTBEAT] 服务端返回心跳异常", e);
+                this.destroyAll();
+                final ConsumerBrokerService that = this;
+
+                // 创建 Future 引用包装器
+                final AtomicReference<ScheduledFuture<?>> futureRef = new AtomicReference<>();
+                final ScheduledFuture<?> future = scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            that.initChannelFutureList(that.config);
+                            that.registerToBroker();
+                            that.isReconnect = false;
+                            futureRef.get().cancel(true);
+                        } catch (MqException e) {
+                            log.error("[HEARTBEAT] 服务端重连失败", e);
+                        } catch (Exception e) {
+                            log.error("[HEARTBEAT] 服务端重连异常", e);
+                            futureRef.get().cancel(true);
+                        }
+                    }
+                }, 5, 5, TimeUnit.SECONDS);
+                // 将 Future 存入包装器
+                futureRef.set(future);
+
+            }catch (Exception exception) {
                 log.error("[HEARTBEAT] 往服务端处理异常", exception);
             }
         }
@@ -464,4 +499,12 @@ public class ConsumerBrokerService implements IConsumerBrokerService {
         }
     }
 
+    public ConsumerBrokerConfig getConfig() {
+        return config;
+    }
+
+    @Override
+    public void setConfig(ConsumerBrokerConfig config) {
+        this.config = config;
+    }
 }

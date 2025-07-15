@@ -101,5 +101,6 @@ public interface IConsumerBrokerService extends Destroyable {
      * @since 0.1.3
      */
     MqCommonResp consumerStatusAckBatch(List<MqConsumerUpdateStatusDto> statusDtoList);
+    public void setConfig(ConsumerBrokerConfig config);
 
 }

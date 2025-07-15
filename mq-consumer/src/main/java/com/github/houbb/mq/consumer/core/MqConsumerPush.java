@@ -225,6 +225,7 @@ public class MqConsumerPush extends Thread implements IMqConsumer  {
 
             //2. 连接到服务端
             this.consumerBrokerService.registerToBroker();
+            this.consumerBrokerService.setConfig(config);
 
             //3. 标识为可用
             statusManager.status(true);
@@ -233,7 +234,7 @@ public class MqConsumerPush extends Thread implements IMqConsumer  {
             final DefaultShutdownHook rpcShutdownHook = new DefaultShutdownHook();
             rpcShutdownHook.setStatusManager(statusManager);
             rpcShutdownHook.setInvokeService(invokeService);
-            rpcShutdownHook.setWaitMillsForRemainRequest(waitMillsForRemainRequest);
+//            rpcShutdownHook.setWaitMillsForRemainRequest(waitMillsForRemainRequest);
             rpcShutdownHook.setDestroyable(this.consumerBrokerService);
             ShutdownHooks.rpcShutdownHook(rpcShutdownHook);
 

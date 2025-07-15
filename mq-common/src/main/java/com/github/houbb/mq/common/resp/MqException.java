@@ -43,4 +43,12 @@ public class MqException extends RuntimeException implements RespCode{
     public String getMsg() {
         return this.respCode.getMsg();
     }
+
+    @Override
+    public String toString() {
+        return "MqException{" +
+                "respCode=" + respCode.getCode() +
+                ", msg=" + respCode.getMsg() +
+                '}';
+    }
 }
