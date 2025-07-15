@@ -11,6 +11,7 @@ import com.github.houbb.mq.common.dto.resp.MqCommonResp;
 import com.github.houbb.mq.common.dto.resp.MqConsumerPullResp;
 import com.github.houbb.mq.common.resp.ConsumerStatus;
 import com.github.houbb.mq.common.resp.MqCommonRespCode;
+import com.github.houbb.mq.common.resp.MqException;
 import com.github.houbb.mq.consumer.api.IMqConsumerListenerContext;
 import com.github.houbb.mq.consumer.dto.MqTopicTagDto;
 import com.github.houbb.mq.consumer.support.listener.MqConsumerListenerContext;
@@ -102,48 +103,59 @@ public class MqConsumerPull extends MqConsumerPush  {
                     log.warn("订阅列表为空，忽略处理。");
                     return;
                 }
+                try {
+                    for(MqTopicTagDto tagDto : subscribeList) {
+                        final String topicName = tagDto.getTopicName();
+                        final String tagRegex = tagDto.getTagRegex();
 
-                for(MqTopicTagDto tagDto : subscribeList) {
-                    final String topicName = tagDto.getTopicName();
-                    final String tagRegex = tagDto.getTagRegex();
+                        MqConsumerPullResp resp = consumerBrokerService.pull(topicName, tagRegex, size);
 
-                    MqConsumerPullResp resp = consumerBrokerService.pull(topicName, tagRegex, size);
+                        if(MqCommonRespCode.SUCCESS.getCode().equals(resp.getRespCode())) {
+                            List<MqMessage> mqMessageList = resp.getList();
+                            if(CollectionUtil.isNotEmpty(mqMessageList)) {
+                                List<MqConsumerUpdateStatusDto> statusDtoList = new ArrayList<>(mqMessageList.size());
+                                for(MqMessage mqMessage : mqMessageList) {
+                                    IMqConsumerListenerContext context = new MqConsumerListenerContext();
+                                    final String messageId = mqMessage.getTraceId();
+                                    ConsumerStatus consumerStatus = mqListenerService.consumer(mqMessage, context);
+                                    log.info("消息：{} 消费结果 {}", messageId, consumerStatus);
 
-                    if(MqCommonRespCode.SUCCESS.getCode().equals(resp.getRespCode())) {
-                        List<MqMessage> mqMessageList = resp.getList();
-                        if(CollectionUtil.isNotEmpty(mqMessageList)) {
-                            List<MqConsumerUpdateStatusDto> statusDtoList = new ArrayList<>(mqMessageList.size());
-                            for(MqMessage mqMessage : mqMessageList) {
-                                IMqConsumerListenerContext context = new MqConsumerListenerContext();
-                                final String messageId = mqMessage.getTraceId();
-                                ConsumerStatus consumerStatus = mqListenerService.consumer(mqMessage, context);
-                                log.info("消息：{} 消费结果 {}", messageId, consumerStatus);
+                                    // 状态同步更新
+                                    if(!ackBatchFlag) {
+                                        MqCommonResp ackResp = consumerBrokerService.consumerStatusAck(messageId, consumerStatus);
+                                        log.info("消息：{} 状态回执结果 {}", messageId, JSON.toJSON(ackResp));
+                                    } else {
+                                        // 批量
+                                        MqConsumerUpdateStatusDto statusDto = new MqConsumerUpdateStatusDto();
+                                        statusDto.setMessageId(messageId);
+                                        statusDto.setMessageStatus(consumerStatus.getCode());
+                                        statusDto.setConsumerGroupName(groupName);
+                                        statusDtoList.add(statusDto);
+                                    }
+                                }
 
-                                // 状态同步更新
-                                if(!ackBatchFlag) {
-                                    MqCommonResp ackResp = consumerBrokerService.consumerStatusAck(messageId, consumerStatus);
-                                    log.info("消息：{} 状态回执结果 {}", messageId, JSON.toJSON(ackResp));
-                                } else {
-                                    // 批量
-                                    MqConsumerUpdateStatusDto statusDto = new MqConsumerUpdateStatusDto();
-                                    statusDto.setMessageId(messageId);
-                                    statusDto.setMessageStatus(consumerStatus.getCode());
-                                    statusDto.setConsumerGroupName(groupName);
-                                    statusDtoList.add(statusDto);
+                                // 批量执行
+                                if(ackBatchFlag) {
+                                    MqCommonResp ackResp = consumerBrokerService.consumerStatusAckBatch(statusDtoList);
+                                    log.info("消息：{} 状态批量回执结果 {}", statusDtoList, JSON.toJSON(ackResp));
+                                    statusDtoList = null;
                                 }
                             }
-
-                            // 批量执行
-                            if(ackBatchFlag) {
-                                MqCommonResp ackResp = consumerBrokerService.consumerStatusAckBatch(statusDtoList);
-                                log.info("消息：{} 状态批量回执结果 {}", statusDtoList, JSON.toJSON(ackResp));
-                                statusDtoList = null;
-                            }
+                        } else {
+                            log.error("拉取消息失败: {}", JSON.toJSON(resp));
                         }
-                    } else {
-                        log.error("拉取消息失败: {}", JSON.toJSON(resp));
                     }
+                } catch (MqException e) {
+                    log.error("拉取消息返回异常", e);
+                    if (MqCommonRespCode.TIMEOUT.getCode().equals(e.getCode())) {
+                        log.warn("拉取消息超时，忽略处理。");
+                    } else {
+                        log.error("拉取消息异常", e);
+                    }
+                } catch (Exception e) {
+                    log.error("拉取消息异常", e);
                 }
+
             }
         }, pullInitDelaySeconds, pullPeriodSeconds, TimeUnit.SECONDS);
     }
