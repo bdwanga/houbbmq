@@ -270,6 +270,7 @@ public class ProducerBrokerService implements IProducerBrokerService{
         if(MqCommonRespCode.SUCCESS.getCode().equals(resp.getRespCode())) {
             return SendResult.of(messageId, SendStatus.SUCCESS);
         }
+        log.error("[Producer] 发送消息失败 messageId: {}, mqMessage: {}, resp: {}", messageId, JSON.toJSON(mqMessage), JSON.toJSON(resp));
 
         throw new MqException(ProducerRespCode.MSG_SEND_FAILED);
     }

@@ -6,6 +6,8 @@ import com.github.houbb.heaven.util.util.CollectionUtil;
 import com.github.houbb.load.balance.api.ILoadBalance;
 import com.github.houbb.load.balance.api.impl.LoadBalanceContext;
 import com.github.houbb.load.balance.support.server.IServer;
+import com.github.houbb.log.integration.core.Log;
+import com.github.houbb.log.integration.core.LogFactory;
 
 import java.util.List;
 import java.util.Objects;
@@ -16,7 +18,7 @@ import java.util.Objects;
  */
 @CommonEager
 public class RandomUtils {
-
+    private static final Log log = LogFactory.getLog(RandomUtils.class);
     /**
      * 负载均衡
      *
@@ -30,17 +32,23 @@ public class RandomUtils {
         if(CollectionUtil.isEmpty(list)) {
             return null;
         }
+        try {
+            if(StringUtil.isEmpty(key)) {
+                LoadBalanceContext<T> loadBalanceContext = LoadBalanceContext.<T>newInstance()
+                        .servers(list);
+                return loadBalance.select(loadBalanceContext);
+            }
 
-        if(StringUtil.isEmpty(key)) {
-            LoadBalanceContext<T> loadBalanceContext = LoadBalanceContext.<T>newInstance()
-                    .servers(list);
-            return loadBalance.select(loadBalanceContext);
+            // 获取 code
+            int hashCode = Objects.hash(key);
+            int index = hashCode % list.size();
+            return list.get(index);
+        } catch (Exception e) {
+            log.error("负载均衡，随机获取失败！", e);
+            e.printStackTrace();
+            //获取失败，超时返回最后一个
+            return list.get(list.size() - 1);
         }
-
-        // 获取 code
-        int hashCode = Objects.hash(key);
-        int index = hashCode % list.size();
-        return list.get(index);
     }
 
 }

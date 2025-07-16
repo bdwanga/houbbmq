@@ -127,6 +127,20 @@ public class LocalBrokerConsumerService implements IBrokerConsumerService {
         log.info("移除注册信息 id: {}, channel: {}", channelId, JSON.toJSON(channelRegister));
         BrokerServiceEntryChannel channelHeartbeat = heartbeatMap.remove(channelId);
         log.info("移除心跳信息 id: {}, channel: {}", channelId, JSON.toJSON(channelHeartbeat));
+        //移除订阅信息
+        for (Map.Entry<String, Set<ConsumerSubscribeBo>> entry : pushSubscribeMap.entrySet())  {
+            Set<ConsumerSubscribeBo> subscribeBoSet = entry.getValue();
+            Iterator<ConsumerSubscribeBo> iterator = subscribeBoSet.iterator();
+            while (iterator.hasNext())  {
+                ConsumerSubscribeBo subscribeBo = iterator.next();
+                if (channelId.equals(subscribeBo.getChannelId()))  {
+                    iterator.remove();  // 安全移除
+                }
+            }
+
+            log.info("移除订阅信息 channelId: {} 的订阅信息，剩余: {}",
+                    channelId, JSON.toJSON(subscribeBoSet));
+        }
     }
 
     @Override
@@ -209,6 +223,7 @@ public class LocalBrokerConsumerService implements IBrokerConsumerService {
 
         for(Map.Entry<String, List<ConsumerSubscribeBo>> entry : groupMap.entrySet()) {
             List<ConsumerSubscribeBo> list = entry.getValue();
+            log.debug("当前订列表，groupName: {}, list: {}", entry.getKey(), JSON.toJSON(list));
 
             ConsumerSubscribeBo bo = RandomUtils.loadBalance(loadBalance, list, shardingKey);
             final String channelId = bo.getChannelId();

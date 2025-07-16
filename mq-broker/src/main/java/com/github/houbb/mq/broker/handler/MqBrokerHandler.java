@@ -308,12 +308,15 @@ public class MqBrokerHandler extends SimpleChannelInboundHandler {
             throw new MqException(MqBrokerRespCode.B_NOT_SUPPORT_METHOD);
         } catch (MqException mqException) {
             log.error("业务执行异常", mqException);
+            mqException.printStackTrace(); // 打印完整堆栈
             MqCommonResp resp = new MqCommonResp();
             resp.setRespCode(mqException.getCode());
             resp.setRespMessage(mqException.getMsg());
             return resp;
         } catch (Exception exception) {
             log.error("执行异常", exception);
+//            log.error("执行异常堆栈", exception.getStackTrace());
+            exception.printStackTrace(); // 打印完整堆栈
             MqCommonResp resp = new MqCommonResp();
             resp.setRespCode(MqCommonRespCode.FAIL.getCode());
             resp.setRespMessage(MqCommonRespCode.FAIL.getMsg());
