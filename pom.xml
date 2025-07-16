@@ -12,25 +12,24 @@
         <module>mq-common</module>
         <module>mq-producer</module>
         <module>mq-consumer</module>
-        <module>mq-test</module>
+<!--        <module>mq-test</module>-->
         <module>mq-broker</module>
     </modules>
 
     <properties>
         <!--============================== All Plugins START ==============================-->
-        <plugin.compiler.version>3.2</plugin.compiler.version>
-        <plugin.compiler.version>3.2</plugin.compiler.version>
-        <plugin.surefire.version>2.18.1</plugin.surefire.version>
+        <plugin.compiler.version>3.8.1</plugin.compiler.version>
+        <plugin.surefire.version>2.22.2</plugin.surefire.version>
         <plugin.surefire.skip-it>false</plugin.surefire.skip-it>
         <plugin.surefire.ignore-failure>false</plugin.surefire.ignore-failure>
 
-        <plugin.maven-source-plugin.version>2.2.1</plugin.maven-source-plugin.version>
+        <plugin.maven-source-plugin.version>3.2.1</plugin.maven-source-plugin.version>
         <plugin.maven-javadoc-plugin.version>2.9.1</plugin.maven-javadoc-plugin.version>
-        <plugin.maven-gpg-plugin.version>1.5</plugin.maven-gpg-plugin.version>
+        <plugin.maven-gpg-plugin.version>3.0.1</plugin.maven-gpg-plugin.version>
 
         <!--============================== MAIN ==============================-->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.compiler.level>1.7</project.compiler.level>
+        <project.compiler.level>1.8</project.compiler.level>
 
         <!--============================== INTER ==============================-->
         <heaven.version>0.1.161</heaven.version>
@@ -40,7 +39,7 @@
 
         <!--============================== OTHER ==============================-->
         <junit.version>4.12</junit.version>
-        <netty.version>4.1.42.Final</netty.version>
+        <netty.version>4.1.99.Final</netty.version>
     </properties>
 
     <dependencyManagement>
@@ -115,7 +114,7 @@
             <dependency>
                 <groupId>com.alibaba</groupId>
                 <artifactId>fastjson</artifactId>
-                <version>1.2.76</version>
+                <version>1.2.83</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -178,16 +177,11 @@
                 <version>3.1.1</version>
             </plugin>
 
-            <!-- Javadoc -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>${plugin.maven-javadoc-plugin.version}</version>
-            </plugin>
 
             <plugin>
                 <!-- maven 打包插件 打原始jar包 第三方依赖打入jar包中-->
                 <artifactId>maven-assembly-plugin</artifactId>
+<!--                <version>3.6.0</version>-->
                 <configuration>
                     <archive>
                         <manifest>
@@ -212,6 +206,13 @@
                     </execution>
                 </executions>
             </plugin>
+
+<!--            发布到远程需要该配置-->
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--                <artifactId>maven-deploy-plugin</artifactId>-->
+<!--                <version>3.1.0</version>-->
+<!--            </plugin>-->
 
         </plugins>
     </build>
@@ -250,6 +251,14 @@
     <profiles>
         <profile>
             <id>release</id>
+            <modules>
+                <!-- 显式列出需要发布的模块（排除mq-test） -->
+                <module>mq-broker</module>
+                <module>mq-producer</module>
+                <module>mq-consumer</module>
+                <module>mq-common</module>
+                <!-- 其他非测试模块... -->
+            </modules>
             <build>
                 <plugins>
                     <!-- Source -->
@@ -263,6 +272,9 @@
                                 <goals>
                                     <goal>jar-no-fork</goal>
                                 </goals>
+                                <configuration>
+                                    <classifier>sources</classifier> <!--添加 classifier -->
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
@@ -280,7 +292,7 @@
                             </execution>
                         </executions>
                     </plugin>
-                    <!-- GPG -->
+                    <!-- GPG 对构件进行GPG签名，确保发布到Maven中央仓库的安全性-->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
@@ -291,6 +303,9 @@
                                 <goals>
                                     <goal>sign</goal>
                                 </goals>
+                                <configuration>
+                                    <classifier>gpg</classifier> <!--添加 classifier -->
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
