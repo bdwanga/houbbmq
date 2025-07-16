@@ -5,14 +5,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.houbb</groupId>
-    <artifactId>mq</artifactId>
+    <artifactId>wmq</artifactId>
     <packaging>pom</packaging>
     <version>0.1.5</version>
     <modules>
         <module>mq-common</module>
         <module>mq-producer</module>
         <module>mq-consumer</module>
-<!--        <module>mq-test</module>-->
+<!--        <module>wmq-test</module>-->
         <module>mq-broker</module>
     </modules>
 
@@ -47,22 +47,22 @@
             <!--============================== SELF ==============================-->
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>mq-producer</artifactId>
+                <artifactId>wmq-producer</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>mq-consumer</artifactId>
+                <artifactId>wmq-consumer</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>mq-common</artifactId>
+                <artifactId>wmq-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>mq-broker</artifactId>
+                <artifactId>wmq-broker</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

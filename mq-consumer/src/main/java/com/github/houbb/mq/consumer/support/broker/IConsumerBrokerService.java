@@ -75,6 +75,8 @@ public interface IConsumerBrokerService extends Destroyable {
      */
     void heartbeat();
 
+    void reconnect();
+
     /**
      * 拉取消息
      * @param topicName 标题名称

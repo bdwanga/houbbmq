@@ -16,6 +16,7 @@ import com.github.houbb.mq.common.support.invoke.IInvokeService;
 import com.github.houbb.mq.common.util.ChannelUtil;
 import com.github.houbb.mq.common.util.DelimiterUtil;
 import com.github.houbb.mq.consumer.api.IMqConsumerListenerContext;
+import com.github.houbb.mq.consumer.support.broker.IConsumerBrokerService;
 import com.github.houbb.mq.consumer.support.listener.IMqListenerService;
 import com.github.houbb.mq.consumer.support.listener.MqConsumerListenerContext;
 import io.netty.buffer.ByteBuf;
@@ -41,6 +42,12 @@ public class MqConsumerHandler extends SimpleChannelInboundHandler {
      * @since 0.0.3
      */
     private IMqListenerService mqListenerService;
+
+    private IConsumerBrokerService consumerBrokerService;
+
+    public void setConsumerBrokerService(IConsumerBrokerService consumerBrokerService) {
+        this.consumerBrokerService = consumerBrokerService;
+    }
 
     public void setInvokeService(IInvokeService invokeService) {
         this.invokeService = invokeService;
@@ -172,5 +179,23 @@ public class MqConsumerHandler extends SimpleChannelInboundHandler {
         log.debug("[Server] channel {} response {}", id, JSON.toJSON(rpcMessageDto));
     }
 
+//    /**
+//     * 连接断开时触发
+//     */
+//    @Override
+//    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+//        log.info("Channel inactive");
+//        super.channelInactive(ctx);
+//    }
+
+    /**
+     * 捕获异常，关闭连接并触发重连
+     */
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        log.error("通信异常捕获，关闭连接，并尝试重连, {}", cause);
+        ctx.close(); // 触发 channelInactive
+        this.consumerBrokerService.reconnect();
+    }
 
 }

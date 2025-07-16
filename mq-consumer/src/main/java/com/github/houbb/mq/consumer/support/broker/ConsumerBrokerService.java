@@ -167,8 +167,11 @@ public class ConsumerBrokerService implements IConsumerBrokerService {
         this.channelFutureList = ChannelFutureUtils.initChannelFutureList(brokerAddress,
                 initChannelHandler(), check);
 
-        //3. 初始化心跳
-        this.initHeartbeat();
+        if (!this.isReconnect) {
+            //3. 初始化心跳
+            this.initHeartbeat();
+        }
+
     }
 
     /**
@@ -176,13 +179,13 @@ public class ConsumerBrokerService implements IConsumerBrokerService {
      * @since 0.0.6
      */
     private void initHeartbeat() {
-        //5S 发一次心跳
+        //60S 发一次心跳
         scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
                 heartbeat();
             }
-        }, 5, 5, TimeUnit.SECONDS);
+        }, 60, 60, TimeUnit.SECONDS);
     }
 
     private ChannelHandler initChannelHandler() {
@@ -191,6 +194,7 @@ public class ConsumerBrokerService implements IConsumerBrokerService {
         final MqConsumerHandler mqProducerHandler = new MqConsumerHandler();
         mqProducerHandler.setInvokeService(invokeService);
         mqProducerHandler.setMqListenerService(mqListenerService);
+        mqProducerHandler.setConsumerBrokerService(this);
 
         // handler 实际上会被多次调用，如果不是 @Shareable，应该每次都重新创建。
         ChannelHandler handler = new ChannelInitializer<Channel>() {
@@ -398,37 +402,48 @@ public class ConsumerBrokerService implements IConsumerBrokerService {
                     log.error("[HEARTBEAT] 服务端心跳处理异常 {}", JSON.toJSON(resp));
                 }
             } catch (MqException e) {
-                this.isReconnect = true;
                 log.error("[HEARTBEAT] 服务端返回心跳异常", e);
-                this.destroyAll();
-                final ConsumerBrokerService that = this;
-
-                // 创建 Future 引用包装器
-                final AtomicReference<ScheduledFuture<?>> futureRef = new AtomicReference<>();
-                final ScheduledFuture<?> future = scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            that.initChannelFutureList(that.config);
-                            that.registerToBroker();
-                            that.reSubscribe();
-                            that.isReconnect = false;
-                            futureRef.get().cancel(true);
-                        } catch (MqException e) {
-                            log.error("[HEARTBEAT] 服务端重连失败", e);
-                        } catch (Exception e) {
-                            log.error("[HEARTBEAT] 服务端重连异常", e);
-                            futureRef.get().cancel(true);
-                        }
-                    }
-                }, 5, 5, TimeUnit.SECONDS);
-                // 将 Future 存入包装器
-                futureRef.set(future);
-
+                this.reconnect();
             }catch (Exception exception) {
                 log.error("[HEARTBEAT] 往服务端处理异常", exception);
             }
         }
+    }
+
+    /**
+     * 服务重连
+     * @author wbd
+     */
+    @Override
+    public void reconnect() {
+        if (this.isReconnect) {
+            return;
+        }
+        this.isReconnect = true;
+        this.destroyAll();
+        final ConsumerBrokerService that = this;
+
+        // 创建 Future 引用包装器
+        final AtomicReference<ScheduledFuture<?>> futureRef = new AtomicReference<>();
+        final ScheduledFuture<?> future = scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    that.initChannelFutureList(that.config);
+                    that.registerToBroker();
+                    that.reSubscribe();
+                    that.isReconnect = false;
+                    futureRef.get().cancel(true);
+                } catch (MqException e) {
+                    log.error("[HEARTBEAT] 服务端重连失败", e);
+                } catch (Exception e) {
+                    log.error("[HEARTBEAT] 服务端重连异常", e);
+                    futureRef.get().cancel(true);
+                }
+            }
+        }, 5, 5, TimeUnit.SECONDS);
+        // 将 Future 存入包装器
+        futureRef.set(future);
     }
 
     @Override
