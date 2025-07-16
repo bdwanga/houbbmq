@@ -51,6 +51,8 @@ public interface IConsumerBrokerService extends Destroyable {
      */
     Channel getChannel(String key);
 
+    void reSubscribe();
+
     /**
      * 订阅
      * @param topicName topic 名称

@@ -2,6 +2,8 @@ package com.github.houbb.mq.broker.dto.consumer;
 
 import com.github.houbb.mq.common.dto.req.MqCommonReq;
 
+import java.util.Objects;
+
 /**
  * 消费者注册入参
  * @author binbin.hou
@@ -63,4 +65,16 @@ public class ConsumerSubscribeReq extends MqCommonReq {
         this.tagRegex = tagRegex;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ConsumerSubscribeReq that = (ConsumerSubscribeReq) o;
+        return Objects.equals(groupName, that.groupName) && Objects.equals(topicName, that.topicName) && Objects.equals(tagRegex, that.tagRegex) && Objects.equals(consumerType, that.consumerType);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(groupName, topicName, tagRegex, consumerType);
+    }
 }

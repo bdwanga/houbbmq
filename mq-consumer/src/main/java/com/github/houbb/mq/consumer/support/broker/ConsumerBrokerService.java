@@ -39,6 +39,7 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -142,6 +143,8 @@ public class ConsumerBrokerService implements IConsumerBrokerService {
     protected String appSecret;
 
     private boolean isReconnect = false;
+
+    private Set<ConsumerSubscribeReq> subscribeReqSet = new CopyOnWriteArraySet<>();
 
     @Override
     public void initChannelFutureList(ConsumerBrokerConfig config) {
@@ -296,6 +299,16 @@ public class ConsumerBrokerService implements IConsumerBrokerService {
         return rpcChannelFuture.getChannelFuture().channel();
     }
 
+    /**
+     * 重新订阅
+     */
+    @Override
+    public void reSubscribe() {
+        for(ConsumerSubscribeReq req : subscribeReqSet) {
+            this.subscribe(req.getTopicName(), req.getTagRegex(), req.getConsumerType());
+        }
+    }
+
     @Override
     public void subscribe(String topicName, String tagRegex, String consumerType) {
         final ConsumerSubscribeReq req = new ConsumerSubscribeReq();
@@ -307,6 +320,7 @@ public class ConsumerBrokerService implements IConsumerBrokerService {
         req.setTagRegex(tagRegex);
         req.setGroupName(groupName);
         req.setConsumerType(consumerType);
+        ConsumerBrokerService that = this;
 
         // 重试订阅
         Retryer.<String>newInstance()
@@ -319,6 +333,7 @@ public class ConsumerBrokerService implements IConsumerBrokerService {
                         if(!MqCommonRespCode.SUCCESS.getCode().equals(resp.getRespCode())) {
                             throw new MqException(ConsumerRespCode.SUBSCRIBE_FAILED);
                         }
+                        that.subscribeReqSet.add(req);
                         return resp.getRespCode();
                     }
                 }).retryCall();
@@ -335,7 +350,7 @@ public class ConsumerBrokerService implements IConsumerBrokerService {
         req.setTagRegex(tagRegex);
         req.setGroupName(groupName);
         req.setConsumerType(consumerType);
-
+        ConsumerBrokerService that = this;
         // 重试取消订阅
         Retryer.<String>newInstance()
                 .maxAttempt(unSubscribeMaxAttempt)
@@ -347,6 +362,12 @@ public class ConsumerBrokerService implements IConsumerBrokerService {
                         if(!MqCommonRespCode.SUCCESS.getCode().equals(resp.getRespCode())) {
                             throw new MqException(ConsumerRespCode.UN_SUBSCRIBE_FAILED);
                         }
+                        final ConsumerSubscribeReq subreq = new ConsumerSubscribeReq();
+                        subreq.setTopicName(topicName);
+                        subreq.setTagRegex(tagRegex);
+                        subreq.setGroupName(groupName);
+                        subreq.setConsumerType(consumerType);
+                        that.subscribeReqSet.remove(subreq);
                         return resp.getRespCode();
                     }
                 }).retryCall();
@@ -390,6 +411,7 @@ public class ConsumerBrokerService implements IConsumerBrokerService {
                         try {
                             that.initChannelFutureList(that.config);
                             that.registerToBroker();
+                            that.reSubscribe();
                             that.isReconnect = false;
                             futureRef.get().cancel(true);
                         } catch (MqException e) {
