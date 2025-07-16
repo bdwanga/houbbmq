@@ -8,6 +8,7 @@
 [![Open Source Love](https://badges.frapsoft.com/os/v2/open-source.svg?v=103)](https://github.com/houbb/nlp-common)
 
 > [变更日志](https://github.com/houbb/mq/blob/master/CHANGELOG.md)
+2025-07-16变更：升级maven包,增加断线重连，优化代码
 
 主要用于个人学习，由渐入深，理解 mq 的底层实现原理。
 
@@ -35,13 +36,15 @@
 
 - AT LEAST ONCE 最少一次原则
 
+- 断线重连
+
 # 快速入门
 
 ## 测试
 
 ### 注册中心
 
-依赖 maven 包：
+依赖 maven 包：最新为0.1.5，没有发布，自己下载打包，下边的示例为老版本
 
 ```xml
 <dependency>
@@ -250,7 +253,7 @@ System.out.println(JSON.toJSON(sendResult));
 
 - [ ] dead message 死信队列
 
-- [ ] 断线重连
+- [x] 断线重连
 
 
 # 中间件等工具开源矩阵
