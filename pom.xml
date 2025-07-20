@@ -12,7 +12,7 @@
         <module>mq-common</module>
         <module>mq-producer</module>
         <module>mq-consumer</module>
-<!--        <module>wmq-test</module>-->
+        <module>mq-test</module>
         <module>mq-broker</module>
     </modules>
 

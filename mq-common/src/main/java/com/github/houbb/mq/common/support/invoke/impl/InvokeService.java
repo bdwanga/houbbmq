@@ -162,9 +162,7 @@ public class InvokeService implements IInvokeService {
                     // 剩余时间≤0表示超时
                     if (remaining <= 0) {
                         logger.warn("[Timeout]  seq {} 等待响应超时({}ms)", seqId);
-                        rpcResponse = new RpcMessageDto();
-                        rpcResponse.setRespCode(MqCommonRespCode.TIMEOUT.getCode());
-                        return rpcResponse;
+                        return RpcMessageDto.timeout();
                     }
 
                     logger.debug("[Wait]  seq {} 等待剩余时间: {}ms", seqId, remaining);
