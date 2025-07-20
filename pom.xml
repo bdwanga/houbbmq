@@ -218,7 +218,7 @@
     </build>
 
     <!--============================== ADD For sonatype START ==============================-->
-    <name>wmq</name>
+    <name>mq</name>
     <description>The remote process call framework.</description>
 
     <parent>
