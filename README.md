@@ -1,7 +1,7 @@
 # mq
 
 [mq](https://github.com/houbb/mq) 是基于 netty 实现的 java mq 框架，类似于 rocket mq。
-本代码是基于houbbmq的升级变更，原项目：https://github.com/houbb/mq
+本代码是基于houbbmq的升级变更,非常感谢老马啸西风开源的项目，原项目：https://github.com/houbb/mq
 
 [![Build Status](https://travis-ci.com/houbb/mq.svg?branch=master)](https://travis-ci.com/houbb/mq)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.houbb/mq/badge.svg)](http://mvnrepository.com/artifact/com.github.houbb/mq)

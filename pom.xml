@@ -4,15 +4,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github.houbb</groupId>
-    <artifactId>wmq</artifactId>
+    <groupId>io.github.bdwanga</groupId>
+    <artifactId>mq</artifactId>
     <packaging>pom</packaging>
     <version>0.1.5</version>
     <modules>
         <module>mq-common</module>
         <module>mq-producer</module>
         <module>mq-consumer</module>
-        <module>mq-test</module>
+<!--        <module>mq-test</module>-->
         <module>mq-broker</module>
     </modules>
 
@@ -23,9 +23,9 @@
         <plugin.surefire.skip-it>false</plugin.surefire.skip-it>
         <plugin.surefire.ignore-failure>false</plugin.surefire.ignore-failure>
 
-        <plugin.maven-source-plugin.version>3.2.1</plugin.maven-source-plugin.version>
+        <plugin.maven-source-plugin.version>3.3.0</plugin.maven-source-plugin.version>
         <plugin.maven-javadoc-plugin.version>2.9.1</plugin.maven-javadoc-plugin.version>
-        <plugin.maven-gpg-plugin.version>3.0.1</plugin.maven-gpg-plugin.version>
+        <plugin.maven-gpg-plugin.version>3.1.0</plugin.maven-gpg-plugin.version>
 
         <!--============================== MAIN ==============================-->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -47,22 +47,22 @@
             <!--============================== SELF ==============================-->
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>wmq-producer</artifactId>
+                <artifactId>mq-producer</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>wmq-consumer</artifactId>
+                <artifactId>mq-consumer</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>wmq-common</artifactId>
+                <artifactId>mq-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>wmq-broker</artifactId>
+                <artifactId>mq-broker</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -178,34 +178,34 @@
             </plugin>
 
 
-            <plugin>
-                <!-- maven 打包插件 打原始jar包 第三方依赖打入jar包中-->
-                <artifactId>maven-assembly-plugin</artifactId>
-<!--                <version>3.6.0</version>-->
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <!--这里要替换成jar包main方法所在类 -->
-                            <mainClass></mainClass>
-                        </manifest>
-                        <manifestEntries>
-                            <Class-Path>.</Class-Path>
-                        </manifestEntries>
-                    </archive>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id> <!-- this is used for inheritance merges -->
-                        <phase>package</phase> <!-- 指定在打包节点执行jar包合并操作 -->
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+<!--            <plugin>-->
+<!--                &lt;!&ndash; maven 打包插件 打原始jar包 第三方依赖打入jar包中&ndash;&gt;-->
+<!--                <artifactId>maven-assembly-plugin</artifactId>-->
+<!--&lt;!&ndash;                <version>3.6.0</version>&ndash;&gt;-->
+<!--                <configuration>-->
+<!--                    <archive>-->
+<!--                        <manifest>-->
+<!--                            &lt;!&ndash;这里要替换成jar包main方法所在类 &ndash;&gt;-->
+<!--                            <mainClass></mainClass>-->
+<!--                        </manifest>-->
+<!--                        <manifestEntries>-->
+<!--                            <Class-Path>.</Class-Path>-->
+<!--                        </manifestEntries>-->
+<!--                    </archive>-->
+<!--                    <descriptorRefs>-->
+<!--                        <descriptorRef>jar-with-dependencies</descriptorRef>-->
+<!--                    </descriptorRefs>-->
+<!--                </configuration>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>make-assembly</id> &lt;!&ndash; this is used for inheritance merges &ndash;&gt;-->
+<!--                        <phase>package</phase> &lt;!&ndash; 指定在打包节点执行jar包合并操作 &ndash;&gt;-->
+<!--                        <goals>-->
+<!--                            <goal>single</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
 
 <!--            发布到远程需要该配置-->
 <!--            <plugin>-->
@@ -221,60 +221,69 @@
     <name>mq</name>
     <description>The remote process call framework.</description>
 
-    <parent>
-        <groupId>org.sonatype.oss</groupId>
-        <artifactId>oss-parent</artifactId>
-        <version>7</version>
-    </parent>
+<!--    <parent>-->
+<!--        <groupId>org.sonatype.oss</groupId>-->
+<!--        <artifactId>oss-parent</artifactId>-->
+<!--        <version>7</version>-->
+<!--    </parent>-->
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
             <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            <distribution>repo</distribution>
         </license>
     </licenses>
     <scm>
-        <url>https://github.com/houbb/mq</url>
-        <connection>https://github.com/houbb/mq.git</connection>
-        <developerConnection>https://houbb.github.io/</developerConnection>
+        <url>hhttps://github.com/bdwanga/houbbmq</url>
+        <connection>https://github.com/bdwanga/houbbmq.git</connection>
+        <developerConnection>https://github.com/bdwanga/houbbmq.git</developerConnection>
     </scm>
     <developers>
         <developer>
-            <name>houbb</name>
-            <email>houbinbin.echo@gmail.com</email>
-            <url>https://houbb.github.io/</url>
+            <name>bdwanga</name>
+            <email>1401710845@qq.com</email>
+            <url>https://github.com/bdwanga</url>
         </developer>
     </developers>
     <!--============================== ADD For sonatype END ==============================-->
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 
 
     <profiles>
         <profile>
             <id>release</id>
-            <modules>
-                <!-- 显式列出需要发布的模块（排除mq-test） -->
-                <module>mq-broker</module>
-                <module>mq-producer</module>
-                <module>mq-consumer</module>
-                <module>mq-common</module>
-                <!-- 其他非测试模块... -->
-            </modules>
             <build>
                 <plugins>
-                    <!-- Source -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>${plugin.compiler.version}</version>
+                        <configuration>
+                            <source>${project.compiler.level}</source>
+                            <target>${project.compiler.level}</target>
+                            <encoding>${project.build.sourceEncoding}</encoding>
+                        </configuration>
+                    </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
                         <version>${plugin.maven-source-plugin.version}</version>
                         <executions>
                             <execution>
+                                <id>attach-sources</id>
                                 <phase>package</phase>
                                 <goals>
                                     <goal>jar-no-fork</goal>
                                 </goals>
-                                <configuration>
-                                    <classifier>sources</classifier> <!--添加 classifier -->
-                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
@@ -285,6 +294,7 @@
                         <version>${plugin.maven-javadoc-plugin.version}</version>
                         <executions>
                             <execution>
+                                <id>attach-javadocs</id>
                                 <phase>package</phase>
                                 <goals>
                                     <goal>jar</goal>
@@ -299,28 +309,27 @@
                         <version>${plugin.maven-gpg-plugin.version}</version>
                         <executions>
                             <execution>
+                                <id>sign-artifacts</id>
                                 <phase>verify</phase>
                                 <goals>
                                     <goal>sign</goal>
                                 </goals>
-                                <configuration>
-                                    <classifier>gpg</classifier> <!--添加 classifier -->
-                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
+
+                    <!-- Source -->
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.8.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                        </configuration>
+                    </plugin>
                 </plugins>
             </build>
-            <distributionManagement>
-                <snapshotRepository>
-                    <id>oss</id>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-                </snapshotRepository>
-                <repository>
-                    <id>oss</id>
-                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-                </repository>
-            </distributionManagement>
         </profile>
     </profiles>
 
