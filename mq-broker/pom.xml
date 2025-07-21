@@ -10,6 +10,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>mq-broker</artifactId>
+    <name>mq-broker</name>
+    <url>https://github.com/bdwanga/houbbmq/tree/master/mq-broker</url>
 
     <dependencies>
         <dependency>

@@ -10,7 +10,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>mq-producer</artifactId>
-
+    <name>mq-producer</name>
+    <url>https://github.com/bdwanga/houbbmq/tree/master/mq-producer</url>
+    
     <dependencies>
         <dependency>
             <groupId>io.github.bdwanga</groupId>

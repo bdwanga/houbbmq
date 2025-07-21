@@ -45,13 +45,13 @@
 
 ### 注册中心
 
-依赖 maven 包：最新为0.1.5，没有发布，自己下载打包，下边的示例为老版本
+依赖 maven 包：
 
 ```xml
 <dependency>
-    <groupId>com.github.houbb</groupId>
+    <groupId>io.github.bdwanga</groupId>
     <artifactId>mq-broker</artifactId>
-    <version>0.1.3</version>
+    <version>0.1.5</version>
 </dependency>
 ```
 
@@ -68,9 +68,9 @@ broker.start();
 
 ```xml
 <dependency>
-    <groupId>com.github.houbb</groupId>
+    <groupId>io.github.bdwanga</groupId>
     <artifactId>mq-consumer</artifactId>
-    <version>0.1.3</version>
+    <version>0.1.5</version>
 </dependency>
 ```
 
@@ -97,9 +97,9 @@ mqConsumerPush.registerListener(new IMqConsumerListener() {
 
 ```xml
 <dependency>
-    <groupId>com.github.houbb</groupId>
+    <groupId>io.github.bdwanga</groupId>
     <artifactId>mq-producer</artifactId>
-    <version>0.1.3</version>
+    <version>0.1.5</version>
 </dependency>
 ```
 

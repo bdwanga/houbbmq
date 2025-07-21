@@ -219,6 +219,7 @@
 
     <!--============================== ADD For sonatype START ==============================-->
     <name>mq</name>
+    <url>https://github.com/bdwanga/houbbmq</url>
     <description>The remote process call framework.</description>
 
 <!--    <parent>-->
@@ -233,7 +234,7 @@
         </license>
     </licenses>
     <scm>
-        <url>hhttps://github.com/bdwanga/houbbmq</url>
+        <url>https://github.com/bdwanga/houbbmq</url>
         <connection>https://github.com/bdwanga/houbbmq.git</connection>
         <developerConnection>https://github.com/bdwanga/houbbmq.git</developerConnection>
     </scm>

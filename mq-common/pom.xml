@@ -10,6 +10,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>mq-common</artifactId>
+    <name>mq-common</name>
+    <url>https://github.com/bdwanga/houbbmq/tree/master/mq-common</url>
 
     <dependencies>
         <!--============================== INTER ==============================-->
