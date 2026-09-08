@@ -18,7 +18,7 @@ public class ConsumerMain {
         final MqConsumerPush mqConsumerPush = new MqConsumerPush();
         mqConsumerPush.start();
 
-        mqConsumerPush.subscribe("TOPIC", "TAGA");
+        mqConsumerPush.subscribe("TOPIC", "000", "TAGA");
         mqConsumerPush.registerListener(new IMqConsumerListener() {
             @Override
             public ConsumerStatus consumer(MqMessage mqMessage, IMqConsumerListenerContext context) {

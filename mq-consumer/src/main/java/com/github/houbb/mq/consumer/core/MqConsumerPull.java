@@ -1,6 +1,7 @@
 package com.github.houbb.mq.consumer.core;
 
 import com.alibaba.fastjson.JSON;
+import com.github.houbb.heaven.util.lang.StringUtil;
 import com.github.houbb.heaven.util.util.CollectionUtil;
 import com.github.houbb.log.integration.core.Log;
 import com.github.houbb.log.integration.core.LogFactory;
@@ -166,19 +167,28 @@ public class MqConsumerPull extends MqConsumerPush  {
     }
 
     @Override
-    public synchronized void subscribe(String topicName, String tagRegex) {
-        MqTopicTagDto tagDto = buildMqTopicTagDto(topicName, tagRegex);
+    public synchronized void subscribe(String topicName, String... tagRegex) {
 
-        if(!subscribeList.contains(tagDto)) {
-            subscribeList.add(tagDto);
+        for (String regex : tagRegex) {
+            if (StringUtil.isEmpty(regex) || StringUtil.isBlank(regex)) {
+                continue;
+            }
+            MqTopicTagDto tagDto = buildMqTopicTagDto(topicName, regex);
+            if(!subscribeList.contains(tagDto)) {
+                subscribeList.add(tagDto);
+            }
         }
     }
 
     @Override
-    public void unSubscribe(String topicName, String tagRegex) {
-        MqTopicTagDto tagDto = buildMqTopicTagDto(topicName, tagRegex);
-
-        subscribeList.remove(tagDto);
+    public void unSubscribe(String topicName, String... tagRegex) {
+        for (String regex : tagRegex) {
+            if (StringUtil.isEmpty(regex) || StringUtil.isBlank(regex)) {
+                continue;
+            }
+            MqTopicTagDto tagDto = buildMqTopicTagDto(topicName, regex);
+            subscribeList.remove(tagDto);
+        }
     }
 
     private MqTopicTagDto buildMqTopicTagDto(String topicName, String tagRegex) {

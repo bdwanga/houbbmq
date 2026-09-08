@@ -1,6 +1,7 @@
 package com.github.houbb.mq.consumer.core;
 
 import com.github.houbb.heaven.util.common.ArgUtil;
+import com.github.houbb.heaven.util.lang.StringUtil;
 import com.github.houbb.load.balance.api.ILoadBalance;
 import com.github.houbb.load.balance.api.impl.LoadBalances;
 import com.github.houbb.log.integration.core.Log;
@@ -259,15 +260,25 @@ public class MqConsumerPush extends Thread implements IMqConsumer  {
     }
 
     @Override
-    public void subscribe(String topicName, String tagRegex) {
+    public void subscribe(String topicName, String... tagRegex) {
         final String consumerType = getConsumerType();
-        consumerBrokerService.subscribe(topicName, tagRegex, consumerType);
+        for (String regex : tagRegex) {
+            if (StringUtil.isEmpty(regex) || StringUtil.isBlank(regex)) {
+                continue;
+            }
+            consumerBrokerService.subscribe(topicName, regex, consumerType);
+        }
     }
 
     @Override
-    public void unSubscribe(String topicName, String tagRegex) {
+    public void unSubscribe(String topicName, String... tagRegex) {
         final String consumerType = getConsumerType();
-        consumerBrokerService.unSubscribe(topicName, tagRegex, consumerType);
+        for (String regex : tagRegex) {
+            if (StringUtil.isEmpty(regex) || StringUtil.isBlank(regex)) {
+                continue;
+            }
+            consumerBrokerService.unSubscribe(topicName, regex, consumerType);
+        }
     }
 
     @Override
