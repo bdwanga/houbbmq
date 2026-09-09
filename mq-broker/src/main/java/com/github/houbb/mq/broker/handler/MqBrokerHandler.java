@@ -28,6 +28,7 @@ import com.github.houbb.mq.common.dto.resp.MqCommonResp;
 import com.github.houbb.mq.common.resp.MqCommonRespCode;
 import com.github.houbb.mq.common.resp.MqException;
 import com.github.houbb.mq.common.rpc.RpcMessageDto;
+import com.github.houbb.mq.common.support.invoke.IFutureInvokeService;
 import com.github.houbb.mq.common.support.invoke.IInvokeService;
 import com.github.houbb.mq.common.util.ChannelUtil;
 import com.github.houbb.mq.common.util.DelimiterUtil;
@@ -52,6 +53,12 @@ public class MqBrokerHandler extends SimpleChannelInboundHandler {
      * @since 1.0.0
      */
     private IInvokeService invokeService;
+
+    /**
+     * 调用管理类
+     * @since 1.0.0
+     */
+    private IFutureInvokeService futureInvokeService;
 
     /**
      * 消费者管理
@@ -102,6 +109,11 @@ public class MqBrokerHandler extends SimpleChannelInboundHandler {
 
     public MqBrokerHandler invokeService(IInvokeService invokeService) {
         this.invokeService = invokeService;
+        return this;
+    }
+
+    public MqBrokerHandler futureInvokeService(IFutureInvokeService futureInvokeService) {
+        this.futureInvokeService = futureInvokeService;
         return this;
     }
 
@@ -409,7 +421,7 @@ public class MqBrokerHandler extends SimpleChannelInboundHandler {
                 .channelList(channelList)
                 .mqMessagePersistPut(put)
                 .mqBrokerPersist(mqBrokerPersist)
-                .invokeService(invokeService)
+                .futureInvokeService(futureInvokeService)
                 .respTimeoutMills(respTimeoutMills)
                 .pushMaxAttempt(pushMaxAttempt);
 

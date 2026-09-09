@@ -20,7 +20,9 @@ import com.github.houbb.mq.broker.support.push.IBrokerPushService;
 import com.github.houbb.mq.broker.support.valid.BrokerRegisterValidService;
 import com.github.houbb.mq.broker.support.valid.IBrokerRegisterValidService;
 import com.github.houbb.mq.common.resp.MqException;
+import com.github.houbb.mq.common.support.invoke.IFutureInvokeService;
 import com.github.houbb.mq.common.support.invoke.IInvokeService;
+import com.github.houbb.mq.common.support.invoke.impl.FutureInvokeService;
 import com.github.houbb.mq.common.support.invoke.impl.InvokeService;
 import com.github.houbb.mq.common.util.DelimiterUtil;
 import io.netty.bootstrap.ServerBootstrap;
@@ -49,6 +51,8 @@ public class MqBroker extends Thread implements IMqBroker {
      * @since 1.0.0
      */
     private final IInvokeService invokeService = new InvokeService();
+
+    private final IFutureInvokeService futureInvokeService = new FutureInvokeService();
 
     /**
      * 消费者管理
@@ -152,6 +156,7 @@ public class MqBroker extends Thread implements IMqBroker {
 
         MqBrokerHandler handler = new MqBrokerHandler();
         handler.invokeService(invokeService)
+                .futureInvokeService(futureInvokeService)
                 .respTimeoutMills(respTimeoutMills)
                 .registerConsumerService(registerConsumerService)
                 .registerProducerService(registerProducerService)

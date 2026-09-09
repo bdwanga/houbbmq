@@ -7,12 +7,12 @@
     <groupId>io.github.bdwanga</groupId>
     <artifactId>mq</artifactId>
     <packaging>pom</packaging>
-    <version>0.1.5</version>
+    <version>0.1.7</version>
     <modules>
         <module>mq-common</module>
         <module>mq-producer</module>
         <module>mq-consumer</module>
-<!--        <module>mq-test</module>-->
+        <module>mq-test</module>
         <module>mq-broker</module>
     </modules>
 

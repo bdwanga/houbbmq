@@ -3,9 +3,8 @@ package com.github.houbb.mq.broker.support.push;
 import com.github.houbb.mq.broker.dto.ChannelGroupNameDto;
 import com.github.houbb.mq.broker.dto.persist.MqMessagePersistPut;
 import com.github.houbb.mq.broker.support.persist.IMqBrokerPersist;
-import com.github.houbb.mq.common.dto.req.MqMessage;
+import com.github.houbb.mq.common.support.invoke.IFutureInvokeService;
 import com.github.houbb.mq.common.support.invoke.IInvokeService;
-import io.netty.channel.Channel;
 
 import java.util.List;
 import java.util.Map;
@@ -23,6 +22,8 @@ public class BrokerPushContext {
     private List<ChannelGroupNameDto> channelList;
 
     private IInvokeService invokeService;
+
+    private IFutureInvokeService futureInvokeService;
 
     /**
      * 获取响应超时时间
@@ -82,6 +83,13 @@ public class BrokerPushContext {
         return this;
     }
 
+    public IFutureInvokeService futureInvokeService() {
+        return futureInvokeService;
+    }
+    public BrokerPushContext futureInvokeService(IFutureInvokeService futureInvokeService) {
+        this.futureInvokeService = futureInvokeService;
+        return this;
+    }
     public long respTimeoutMills() {
         return respTimeoutMills;
     }
