@@ -53,7 +53,7 @@ public class ChannelFutureUtils {
                             @Override
                             protected void initChannel(Channel ch) throws Exception {
                                 ch.pipeline()
-                                        .addLast(new LoggingHandler(LogLevel.INFO))
+                                        .addLast(new LoggingHandler(LogLevel.DEBUG))
                                         .addLast(channelHandler);
                             }
                         })

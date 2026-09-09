@@ -21,10 +21,12 @@ public class ProducerMain {
                 .appSecret("mq");
         mqProducer.start();
 
-        for(int i = 0; i < 20; i++) {
+        for(int i = 0; i < 3; i++) {
             MqMessage mqMessage = buildMessage(i);
-            SendResult sendResult = mqProducer.send(mqMessage);
-            System.out.println(JSON.toJSON(sendResult));
+//            SendResult sendResult = mqProducer.send(mqMessage);
+//            System.out.println(JSON.toJSON(mqMessage));
+            mqProducer.send(mqMessage);
+            try { Thread.sleep(1000); } catch (InterruptedException e) { e.printStackTrace(); }
         }
     }
 

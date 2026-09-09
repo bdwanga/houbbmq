@@ -65,6 +65,8 @@ public class InvokeService implements IInvokeService {
         Long expireTime = this.requestMap.get(seqId);
         // 如果为空，可能是这个结果已经超时了，被定时 job 移除之后，响应结果才过来。直接忽略
         if(ObjectUtil.isNull(expireTime)) {
+            // 移除对应的 requestMap
+            requestMap.remove(seqId);
             return this;
         }
 
@@ -162,6 +164,7 @@ public class InvokeService implements IInvokeService {
                     // 剩余时间≤0表示超时
                     if (remaining <= 0) {
                         logger.warn("[Timeout]  seq {} 等待响应超时({}ms)", seqId);
+                        requestMap.remove(seqId);
                         return RpcMessageDto.timeout();
                     }
 

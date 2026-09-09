@@ -26,8 +26,9 @@ public class ProducerMainBatch {
             mqMessageList.add(mqMessage);
         }
 
-        SendBatchResult sendResult = mqProducer.sendBatch(mqMessageList);
-        System.out.println(JSON.toJSON(sendResult));
+//        SendBatchResult sendResult = mqProducer.sendBatch(mqMessageList);
+//        System.out.println(JSON.toJSON(sendResult));
+        mqProducer.sendBatch(mqMessageList);
     }
 
     private static MqMessage buildMessage(int i) {

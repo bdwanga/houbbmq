@@ -181,6 +181,7 @@ public class MqBrokerHandler extends SimpleChannelInboundHandler {
 
             // 添加消息
             invokeService.addResponse(traceId, rpcMessageDto);
+            futureInvokeService.addResponse(traceId, rpcMessageDto);
         }
     }
 

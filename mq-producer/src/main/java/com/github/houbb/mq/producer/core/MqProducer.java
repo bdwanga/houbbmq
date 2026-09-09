@@ -24,6 +24,10 @@ import com.github.houbb.mq.producer.support.broker.ProducerBrokerConfig;
 import com.github.houbb.mq.producer.support.broker.ProducerBrokerService;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 默认 mq 生产者
@@ -33,6 +37,15 @@ import java.util.List;
 public class MqProducer extends Thread implements IMqProducer {
 
     private static final Log log = LogFactory.getLog(MqProducer.class);
+
+    // 自定义线程池替换单线程
+    private static final ExecutorService EXECUTOR_SERVICE = new ThreadPoolExecutor(
+            Runtime.getRuntime().availableProcessors() * 2, // 核心线程数 (根据业务压测调整)
+            200,                                          // 最大线程数
+            60L, TimeUnit.SECONDS,                        // 空闲存活时间
+            new LinkedBlockingQueue<>(10000),             // 有界队列，防止OOM
+            new ThreadPoolExecutor.CallerRunsPolicy()     // 拒绝策略：队列满时由调用线程执行，起到限流作用
+    );
 
     /**
      * 分组名称
@@ -207,23 +220,32 @@ public class MqProducer extends Thread implements IMqProducer {
     }
 
     @Override
-    public SendResult send(MqMessage mqMessage) {
-        return this.producerBrokerService.send(mqMessage);
+    public void send(MqMessage mqMessage) {
+        // 将整个任务提交到线程池，实现消息级别的并发
+        EXECUTOR_SERVICE.submit(() -> {
+            this.producerBrokerService.send(mqMessage);
+        });
     }
 
     @Override
-    public SendResult sendOneWay(MqMessage mqMessage) {
-        return this.producerBrokerService.sendOneWay(mqMessage);
+    public void sendOneWay(MqMessage mqMessage) {
+        EXECUTOR_SERVICE.submit(() -> {
+            this.producerBrokerService.sendOneWay(mqMessage);
+        });
     }
 
     @Override
-    public SendBatchResult sendBatch(List<MqMessage> mqMessageList) {
-        return producerBrokerService.sendBatch(mqMessageList);
+    public void sendBatch(List<MqMessage> mqMessageList) {
+        EXECUTOR_SERVICE.submit(() -> {
+            this.producerBrokerService.sendBatch(mqMessageList);
+        });
     }
 
     @Override
-    public SendBatchResult sendOneWayBatch(List<MqMessage> mqMessageList) {
-        return producerBrokerService.sendOneWayBatch(mqMessageList);
+    public void sendOneWayBatch(List<MqMessage> mqMessageList) {
+        EXECUTOR_SERVICE.submit(() -> {
+            this.producerBrokerService.sendOneWayBatch(mqMessageList);
+        });
     }
 
 }

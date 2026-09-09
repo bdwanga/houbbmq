@@ -144,10 +144,6 @@ public class BrokerPushService implements IBrokerPushService {
                                                                    long responseTime,
                                                                    int maxAttempt,
                                                                    int currentAttempt) {
-        // 每次重试前，必须更新 traceId/seqId
-        String newTraceId = IdHelper.uuid32();
-        mqMessage.setTraceId(newTraceId);
-
         // 1. 发起异步调用
         CompletableFuture<MqConsumerResultResp> future = callServerAsync(channel, mqMessage,
                 MqConsumerResultResp.class, invokeService, responseTime);
@@ -160,11 +156,15 @@ public class BrokerPushService implements IBrokerPushService {
 
             if (needRetry) {
                 if (currentAttempt < maxAttempt) {
-                    log.warn("推送失败，准备进行第 {} 次重试。traceId: {}", currentAttempt + 1, newTraceId);
+                    // 每次重试前，必须更新 traceId/seqId
+//                    String newTraceId = IdHelper.uuid32();
+                    int nextAttempt = currentAttempt + 1;
+                    mqMessage.setTraceId(mqMessage.getTraceId() + "-" + nextAttempt);
+                    log.warn("推送失败，准备进行第 {} 次重试。traceId: {}", nextAttempt, mqMessage.getTraceId());
                     // 递归调用进行重试
-                    return retryPushAsync(channel, mqMessage, invokeService, responseTime, maxAttempt, currentAttempt + 1);
+                    return retryPushAsync(channel, mqMessage, invokeService, responseTime, maxAttempt, nextAttempt);
                 } else {
-                    log.error("推送失败且已达最大重试次数 {}。traceId: {}", maxAttempt, newTraceId);
+                    log.error("推送失败且已达最大重试次数 {}。traceId: {}", maxAttempt, mqMessage.getTraceId());
                     MqConsumerResultResp failResp = new MqConsumerResultResp();
                     failResp.setRespCode(MqCommonRespCode.FAIL.getCode());
                     return CompletableFuture.completedFuture(failResp);

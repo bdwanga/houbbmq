@@ -30,7 +30,6 @@ public class FutureInvokeService implements IFutureInvokeService {
     @Override
     public CompletableFuture<RpcMessageDto> addRequest(String seqId, long timeoutMills) {
         logger.debug("[Invoke] start add request for seqId: {}, timeoutMills: {}", seqId, timeoutMills);
-
         final long expireTime = System.currentTimeMillis() + timeoutMills;
         requestMap.put(seqId, expireTime);
 
@@ -54,7 +53,9 @@ public class FutureInvokeService implements IFutureInvokeService {
     public IFutureInvokeService addResponse(String seqId, RpcMessageDto rpcResponse) {
         Long expireTime = this.requestMap.get(seqId);
         if (ObjectUtil.isNull(expireTime)) {
-            logger.debug("[Invoke] seqId:{} 信息已超时或不存在，忽略响应。", seqId);
+//            logger.debug("[Invoke] seqId:{} 信息已超时或不存在，忽略响应。", seqId);
+            requestMap.remove(seqId);
+            futureMap.remove(seqId);
             return this;
         }
 
