@@ -245,6 +245,10 @@ public class ConsumerBrokerService implements IConsumerBrokerService {
 
     @Override
     public <T extends MqCommonReq, R extends MqCommonResp> R callServer(Channel channel, T commonReq, Class<R> respClass) {
+        if (channel == null || !channel.isActive()) {
+            log.warn("[Consumer] Channel 已断开，取消发送。traceId: {}", commonReq.getTraceId());
+            return null;
+        }
         final String traceId = commonReq.getTraceId();
         final long requestTime = System.currentTimeMillis();
 

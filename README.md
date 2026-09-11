@@ -114,6 +114,8 @@ MqMessage mqMessage = new MqMessage();
 mqMessage.setTopic("TOPIC");
 mqMessage.setTags(Arrays.asList("TAGA", "TAGB"));
 mqMessage.setPayload(message);
+//设置orderMsgKey的话表示顺序消息，相同的orderMsgKey会按顺序发送
+mqMessage.setOrderMsgKey("devno");
 
 SendResult sendResult = mqProducer.send(mqMessage);
 System.out.println(JSON.toJSON(sendResult));
@@ -204,12 +206,6 @@ System.out.println(JSON.toJSON(sendResult));
 | mq-consumer | 客户端 |
 | mq-test | 测试模块 |
 
-# 测试代码
-
-这部分测试代码可以关注公众号【老马啸西风】，后台回复【mq】领取。
-
-![qrcode](qrcode.jpg)
-
 # 后期 ROAD-MAP
 
 - [ ] all 模块
@@ -240,7 +236,7 @@ System.out.println(JSON.toJSON(sendResult));
 
 - [x] 添加注册鉴权，保证安全性
 
-- [ ] 顺序消息 
+- [x] 顺序消息 
 
 - [ ] 事务消息
 

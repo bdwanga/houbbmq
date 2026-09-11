@@ -187,7 +187,7 @@ public class ProducerBrokerService implements IProducerBrokerService{
     @Override
     public <T extends MqCommonReq, R extends MqCommonResp> R callServer(Channel channel, T commonReq, Class<R> respClass) {
         if (channel == null || !channel.isActive()) {
-            log.warn("[Client] Channel 已断开，取消发送。traceId: {}", commonReq.getTraceId());
+            log.warn("[Producer] Channel 已断开，取消发送。traceId: {}", commonReq.getTraceId());
             // todo 如果不是注销消息，记录到重试队列中
             throw new MqException(MqCommonRespCode.FAIL);
         }
