@@ -8,17 +8,17 @@ import com.github.houbb.log.integration.core.LogFactory;
 import com.github.houbb.mq.common.dto.req.MqMessage;
 import com.github.houbb.mq.common.resp.MqException;
 import com.github.houbb.mq.common.rpc.RpcChannelFuture;
+import com.github.houbb.mq.common.support.executor.OrderedExecutor;
 import com.github.houbb.mq.common.support.hook.DefaultShutdownHook;
 import com.github.houbb.mq.common.support.hook.ShutdownHooks;
 import com.github.houbb.mq.common.support.invoke.IInvokeService;
 import com.github.houbb.mq.common.support.invoke.impl.InvokeService;
 import com.github.houbb.mq.common.support.status.IStatusManager;
 import com.github.houbb.mq.common.support.status.StatusManager;
+import com.github.houbb.mq.common.util.ThreadUtil;
 import com.github.houbb.mq.producer.api.IMqProducer;
 import com.github.houbb.mq.producer.constant.ProducerConst;
 import com.github.houbb.mq.producer.constant.ProducerRespCode;
-import com.github.houbb.mq.producer.dto.SendBatchResult;
-import com.github.houbb.mq.producer.dto.SendResult;
 import com.github.houbb.mq.producer.support.broker.IProducerBrokerService;
 import com.github.houbb.mq.producer.support.broker.ProducerBrokerConfig;
 import com.github.houbb.mq.producer.support.broker.ProducerBrokerService;
@@ -39,13 +39,16 @@ public class MqProducer extends Thread implements IMqProducer {
     private static final Log log = LogFactory.getLog(MqProducer.class);
 
     // 自定义线程池替换单线程
-    private static final ExecutorService EXECUTOR_SERVICE = new ThreadPoolExecutor(
+    private final ExecutorService EXECUTOR_SERVICE = new ThreadPoolExecutor(
             Runtime.getRuntime().availableProcessors() * 2, // 核心线程数 (根据业务压测调整)
             200,                                          // 最大线程数
             60L, TimeUnit.SECONDS,                        // 空闲存活时间
             new LinkedBlockingQueue<>(10000),             // 有界队列，防止OOM
             new ThreadPoolExecutor.CallerRunsPolicy()     // 拒绝策略：队列满时由调用线程执行，起到限流作用
     );
+
+    //顺序执行调度器
+    private final OrderedExecutor ORDERED_EXECUTOR = new OrderedExecutor();
 
     /**
      * 分组名称
@@ -207,6 +210,13 @@ public class MqProducer extends Thread implements IMqProducer {
             rpcShutdownHook.setInvokeService(invokeService);
             rpcShutdownHook.setWaitMillsForRemainRequest(waitMillsForRemainRequest);
             rpcShutdownHook.setDestroyable(this.producerBrokerService);
+            rpcShutdownHook.setShutdownFunction(shutdownHook -> {
+                log.info("开始关闭生产者线程池等");
+                ThreadUtil.shutdownExecutor(EXECUTOR_SERVICE);
+                ORDERED_EXECUTOR.shutdown();
+                return true;
+            });
+
             ShutdownHooks.rpcShutdownHook(rpcShutdownHook);
 
             log.info("MQ 生产者启动完成");
@@ -221,31 +231,58 @@ public class MqProducer extends Thread implements IMqProducer {
 
     @Override
     public void send(MqMessage mqMessage) {
-        // 将整个任务提交到线程池，实现消息级别的并发
-        EXECUTOR_SERVICE.submit(() -> {
-            this.producerBrokerService.send(mqMessage);
-        });
+        if (mqMessage.isOrderMsg()) {
+            ORDERED_EXECUTOR.execute(mqMessage.getOrderMsgKey(), () -> {
+                this.producerBrokerService.send(mqMessage);
+            });
+        } else {
+            // 将整个任务提交到线程池，实现消息级别的并发
+            EXECUTOR_SERVICE.submit(() -> {
+                this.producerBrokerService.send(mqMessage);
+            });
+        }
     }
 
     @Override
     public void sendOneWay(MqMessage mqMessage) {
-        EXECUTOR_SERVICE.submit(() -> {
-            this.producerBrokerService.sendOneWay(mqMessage);
-        });
+        if (mqMessage.isOrderMsg()) {
+            ORDERED_EXECUTOR.execute(mqMessage.getOrderMsgKey(), () -> {
+                this.producerBrokerService.sendOneWay(mqMessage);
+            });
+        } else {
+            // 将整个任务提交到线程池，实现消息级别的并发
+            EXECUTOR_SERVICE.submit(() -> {
+                this.producerBrokerService.sendOneWay(mqMessage);
+            });
+        }
     }
 
     @Override
     public void sendBatch(List<MqMessage> mqMessageList) {
-        EXECUTOR_SERVICE.submit(() -> {
-            this.producerBrokerService.sendBatch(mqMessageList);
-        });
+        if (mqMessageList.stream().anyMatch(msg -> msg.isOrderMsg())) {
+            ORDERED_EXECUTOR.execute(mqMessageList.get(0).getOrderMsgKey(), () -> {
+                this.producerBrokerService.sendBatch(mqMessageList);
+            });
+        } else {
+            // 将整个任务提交到线程池，实现消息级别的并发
+            EXECUTOR_SERVICE.submit(() -> {
+                this.producerBrokerService.sendBatch(mqMessageList);
+            });
+        }
     }
 
     @Override
     public void sendOneWayBatch(List<MqMessage> mqMessageList) {
-        EXECUTOR_SERVICE.submit(() -> {
-            this.producerBrokerService.sendOneWayBatch(mqMessageList);
-        });
+        if (mqMessageList.stream().anyMatch(msg -> msg.isOrderMsg())) {
+            ORDERED_EXECUTOR.execute(mqMessageList.get(0).getOrderMsgKey(), () -> {
+                this.producerBrokerService.sendOneWayBatch(mqMessageList);
+            });
+        } else {
+            // 将整个任务提交到线程池，实现消息级别的并发
+            EXECUTOR_SERVICE.submit(() -> {
+                this.producerBrokerService.sendOneWayBatch(mqMessageList);
+            });
+        }
     }
 
 }

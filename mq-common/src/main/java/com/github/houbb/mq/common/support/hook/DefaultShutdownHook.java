@@ -6,7 +6,8 @@ import com.github.houbb.log.integration.core.LogFactory;
 import com.github.houbb.mq.common.api.Destroyable;
 import com.github.houbb.mq.common.support.invoke.IInvokeService;
 import com.github.houbb.mq.common.support.status.IStatusManager;
-import com.github.houbb.mq.common.support.status.StatusManager;
+
+import java.util.function.Function;
 
 /**
  * 默认的 hook 实现
@@ -47,6 +48,8 @@ public class DefaultShutdownHook extends AbstractShutdownHook {
      */
     private long waitMillsForRemainRequest = 60 * 1000;
 
+    private Function<DefaultShutdownHook, Boolean> shutdownFunction;
+
     public IInvokeService getInvokeService() {
         return invokeService;
     }
@@ -79,6 +82,13 @@ public class DefaultShutdownHook extends AbstractShutdownHook {
         this.waitMillsForRemainRequest = waitMillsForRemainRequest;
     }
 
+    public Function<DefaultShutdownHook, Boolean> getShutdownFunction() {
+        return shutdownFunction;
+    }
+    public void setShutdownFunction(Function<DefaultShutdownHook, Boolean> shutdownFunction) {
+        this.shutdownFunction = shutdownFunction;
+    }
+
     /**
      * （1）设置 status 状态为等待关闭
      * （2）查看是否 {@link IInvokeService#remainsRequest()} 是否包含请求
@@ -88,29 +98,37 @@ public class DefaultShutdownHook extends AbstractShutdownHook {
      */
     @Override
     protected void doHook() {
-        statusManager.status(false);
+        if (statusManager != null) {
+            statusManager.status(false);
+        }
         // 设置状态为等待关闭
         logger.info("[Shutdown] set status to wait for shutdown.");
-
-        // 循环等待当前执行的请求执行完成
-        long startMills = System.currentTimeMillis();
-        while (invokeService.remainsRequest()) {
-            long currentMills = System.currentTimeMillis();
-            long costMills = currentMills - startMills;
-            if(costMills >= waitMillsForRemainRequest) {
-                logger.warn("[Shutdown] still remains request, but timeout, break.");
-                break;
-            }
-
-            logger.debug("[Shutdown] still remains request, wait for a while.");
-            DateUtil.sleep(100);
-        }
 
         // 销毁
         destroyable.destroyAll();
 
+        if(null != shutdownFunction) {
+            shutdownFunction.apply(this);
+        }
+
+        // 循环等待当前执行的请求执行完成
+        if (invokeService != null) {
+            long startMills = System.currentTimeMillis();
+            while (invokeService.remainsRequest()) {
+                long currentMills = System.currentTimeMillis();
+                long costMills = currentMills - startMills;
+                if(costMills >= waitMillsForRemainRequest) {
+                    logger.warn("[Shutdown] still remains request, but timeout, break.");
+                    break;
+                }
+
+                logger.debug("[Shutdown] still remains request, wait for a while.");
+                DateUtil.sleep(100);
+            }
+        }
+
         // 设置状态为关闭成功
-        statusManager.status(false);
+//        statusManager.status(false);
         logger.info("[Shutdown] set status to shutdown success.");
     }
 

@@ -20,11 +20,14 @@ import com.github.houbb.mq.broker.support.push.IBrokerPushService;
 import com.github.houbb.mq.broker.support.valid.BrokerRegisterValidService;
 import com.github.houbb.mq.broker.support.valid.IBrokerRegisterValidService;
 import com.github.houbb.mq.common.resp.MqException;
+import com.github.houbb.mq.common.support.hook.DefaultShutdownHook;
+import com.github.houbb.mq.common.support.hook.ShutdownHooks;
 import com.github.houbb.mq.common.support.invoke.IFutureInvokeService;
 import com.github.houbb.mq.common.support.invoke.IInvokeService;
 import com.github.houbb.mq.common.support.invoke.impl.FutureInvokeService;
 import com.github.houbb.mq.common.support.invoke.impl.InvokeService;
 import com.github.houbb.mq.common.util.DelimiterUtil;
+import com.github.houbb.mq.common.util.ThreadUtil;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
@@ -173,6 +176,8 @@ public class MqBroker extends Thread implements IMqBroker {
     public void run() {
         // 启动服务端
         log.info("MQ 中间人开始启动服务端 port: {}", port);
+        // 1. 启动时只执行一次：注册关闭钩子
+        registerShutdownHook();
 
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -208,6 +213,17 @@ public class MqBroker extends Thread implements IMqBroker {
             workerGroup.shutdownGracefully();
             bossGroup.shutdownGracefully();
         }
+    }
+
+    /**
+     * 提取出的关闭钩子注册方法，确保全局只执行一次
+     */
+    private void registerShutdownHook() {
+        final DefaultShutdownHook rpcShutdownHook = new DefaultShutdownHook();
+        rpcShutdownHook.setInvokeService(invokeService);
+        rpcShutdownHook.setDestroyable(brokerPushService);
+
+        ShutdownHooks.rpcShutdownHook(rpcShutdownHook);
     }
 
 }

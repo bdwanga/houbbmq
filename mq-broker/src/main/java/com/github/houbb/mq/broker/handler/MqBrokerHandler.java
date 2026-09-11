@@ -422,11 +422,17 @@ public class MqBrokerHandler extends SimpleChannelInboundHandler {
                 .channelList(channelList)
                 .mqMessagePersistPut(put)
                 .mqBrokerPersist(mqBrokerPersist)
+                .invokeService(invokeService)
                 .futureInvokeService(futureInvokeService)
                 .respTimeoutMills(respTimeoutMills)
                 .pushMaxAttempt(pushMaxAttempt);
 
-        brokerPushService.asyncPush(brokerPushContext);
+        if (mqMessage.isOrderMsg()) {
+            //顺序消息
+            brokerPushService.syncPush(brokerPushContext);
+        } else {
+            brokerPushService.asyncPush(brokerPushContext);
+        }
     }
 
     /**

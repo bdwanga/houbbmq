@@ -38,6 +38,9 @@ public class MqMessage extends MqCommonReq {
      */
     private String shardingKey;
 
+    //顺序消息标志，不是空，并且值相同的值消息会按顺序发送
+    private String orderMsgKey;
+
     public String getGroupName() {
         return groupName;
     }
@@ -84,5 +87,16 @@ public class MqMessage extends MqCommonReq {
 
     public void setShardingKey(String shardingKey) {
         this.shardingKey = shardingKey;
+    }
+
+    public String getOrderMsgKey() {
+        return orderMsgKey;
+    }
+    public void setOrderMsgKey(String orderMsgKey) {
+        this.orderMsgKey = orderMsgKey;
+    }
+
+    public boolean isOrderMsg() {
+        return orderMsgKey != null && !orderMsgKey.isEmpty();
     }
 }
